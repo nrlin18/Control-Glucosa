@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi Glucosa">
+<title>Mi Glucosa — Control de diabetes</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{
+  --bg:#f3f6f6; --card:#fff; --ink:#14212b; --muted:#5f6f7a; --line:#dde5e8;
+  --pri:#0f766e; --pri2:#14b8a6; --priSoft:#e6f5f3;
+  --ok:#15803d; --okSoft:#e8f6ec; --warn:#b45309; --warnSoft:#fdf3e2;
+  --bad:#b91c1c; --badSoft:#fdecec; --low:#7c3aed; --lowSoft:#f1ebfe;
+  --r:16px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0e1518;--card:#172126;--ink:#e6eef1;--muted:#93a4ad;--line:#26343a;--priSoft:#12302c;--okSoft:#13291b;--warnSoft:#2e2412;--badSoft:#331617;--lowSoft:#251a3d}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--pri);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;display:flex;align-items:center;gap:10px}
+header h1{font-size:19px;margin:0;flex:1}
+header small{opacity:.85;font-size:12px}
+main{padding:14px 14px 110px;max-width:760px;margin:0 auto}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;color:var(--muted);padding:9px 2px 8px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button svg{width:24px;height:24px}
+nav button.on{color:var(--pri);font-weight:600}
+.card{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);border:1px solid var(--line)}
+.card h2{font-size:16px;margin:0 0 10px}
+.muted{color:var(--muted);font-size:13px}
+.row{display:flex;gap:10px;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:600;background:var(--priSoft);color:var(--pri);cursor:pointer}
+.btn.pri{background:var(--pri);color:#fff}
+.btn.big{width:100%;padding:16px;font-size:17px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn.danger{background:var(--badSoft);color:var(--bad)}
+.btn.sm{padding:8px 10px;font-size:13px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit;background:var(--card);color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 12px;font-size:14px}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.slot{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.slot:first-of-type{border-top:0}
+.dot{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:18px;flex:none;background:var(--line)}
+.slot .t{flex:1}
+.slot .t b{display:block;font-size:15px}
+.val{font-weight:700;font-size:18px;padding:4px 10px;border-radius:10px}
+.lv-ok{background:var(--okSoft);color:var(--ok)}
+.lv-high{background:var(--warnSoft);color:var(--warn)}
+.lv-vhigh{background:var(--badSoft);color:var(--bad)}
+.lv-low{background:var(--lowSoft);color:var(--low)}
+.big-num{font-size:42px;font-weight:800;text-align:center;letter-spacing:-1px}
+.photo-box{border:2px dashed var(--line);border-radius:14px;min-height:150px;display:grid;place-items:center;overflow:hidden;position:relative;background:var(--bg)}
+.photo-box img{width:100%;max-height:320px;object-fit:contain;display:block}
+.photo-box .ph{color:var(--muted);text-align:center;padding:20px}
+.entry{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.entry:first-child{border-top:0}
+.thumb{width:54px;height:54px;border-radius:10px;object-fit:cover;background:var(--line);flex:none}
+.entry .info{flex:1;min-width:0}
+.entry .info b{font-size:14px}
+.entry .info div{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day-h{font-size:13px;font-weight:700;color:var(--muted);margin:16px 4px 6px;text-transform:capitalize}
+table.plan{width:100%;border-collapse:collapse;font-size:13px}
+table.plan th,table.plan td{border:1px solid var(--line);padding:6px 4px;text-align:center}
+table.plan th{background:var(--priSoft);color:var(--pri);font-size:12px}
+table.plan td.d{text-align:left;font-weight:600;white-space:nowrap}
+.alert{border-radius:12px;padding:12px;margin:10px 0;font-size:14px}
+.alert.low{background:var(--lowSoft);color:var(--low)}
+.alert.bad{background:var(--badSoft);color:var(--bad)}
+.alert.warn{background:var(--warnSoft);color:var(--warn)}
+.alert.ok{background:var(--okSoft);color:var(--ok)}
+.alert.info{background:var(--priSoft);color:var(--pri)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--bg);border-radius:12px;padding:10px;text-align:center}
+.kpi b{display:block;font-size:22px}
+.kpi span{font-size:11px;color:var(--muted)}
+.bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.progress{height:8px;border-radius:6px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--pri2)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:none;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:760px;max-height:94vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
+.sheet .grab{width:44px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+.timer{display:flex;align-items:center;gap:10px;background:var(--priSoft);color:var(--pri);border-radius:14px;padding:12px;margin-bottom:12px}
+.timer b{font-size:22px;font-variant-numeric:tabular-nums}
+.hidden{display:none!important}
+svg.chart{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#14212b;color:#fff;padding:10px 16px;border-radius:12px;z-index:30;font-size:14px;opacity:0;transition:.25s;pointer-events:none}
+.toast.on{opacity:1}
+.foot{font-size:11px;color:var(--muted);text-align:center;margin-top:18px}
+@media print{
+  header,nav,.noprint,.btn{display:none!important}
+  main{padding:0}
+  .card{box-shadow:none;break-inside:avoid}
+  body{background:#fff;color:#000}
+}
+</style>
+</head>
+<body>
+<header>
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M12 2s-7 7.6-7 12.5A7 7 0 0 0 19 14.5C19 9.6 12 2 12 2z"/></svg>
+  <div style="flex:1"><h1>Mi Glucosa</h1><small id="hdrSub">Control de diabetes</small></div>
+  <button class="btn sm noprint" style="background:rgba(255,255,255,.18);color:#fff" onclick="openNew()">+ Medir</button>
+</header>
+
+<main>
+  <!-- ============ HOY ============ -->
+  <section id="v-hoy">
+    <div id="mealTimer" class="timer hidden">
+      <span style="font-size:22px">⏱️</span>
+      <div style="flex:1"><div style="font-size:13px">Posprandial: medir 2 h después de empezar a comer</div><b id="mealCount">--:--</b></div>
+      <button class="btn sm" onclick="cancelMeal()">Quitar</button>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0" id="todayTitle">Hoy</h2>
+        <span class="muted" id="todayCount"></span>
+      </div>
+      <div class="progress" style="margin:10px 0 4px"><i id="todayProg" style="width:0"></i></div>
+      <div id="slots"></div>
+    </div>
+
+    <button class="btn pri big" onclick="openNew()">📷 Nueva medición con foto</button>
+    <div style="height:10px"></div>
+    <button class="btn big" onclick="startMeal()">🍽️ Empecé a comer (avisar a las 2 h)</button>
+
+    <div class="card" style="margin-top:12px" id="weekCard">
+      <h2>Plan de 7 días</h2>
+      <div id="weekSummary"></div>
+    </div>
+
+    <div class="card">
+      <h2>Últimas mediciones</h2>
+      <div id="lastList"></div>
+    </div>
+  </section>
+
+  <!-- ============ REGISTRO ============ -->
+  <section id="v-reg" class="hidden">
+    <div class="card noprint">
+      <div class="row">
+        <select id="fltMoment" onchange="renderLog()">
+          <option value="">Todos los momentos</option>
+        </select>
+        <select id="fltRange" onchange="renderLog()">
+          <option value="7">7 días</option><option value="14">14 días</option><option value="30">30 días</option><option value="90">90 días</option><option value="0">Todo</option>
+        </select>
+      </div>
+    </div>
+    <div id="logList"></div>
+  </section>
+
+  <!-- ============ PLAN ============ -->
+  <section id="v-plan" class="hidden">
+    <div class="card">
+      <h2>Plan de medición — 1 semana</h2>
+      <p class="muted" style="margin-top:0">Mínimo 3 mediciones diarias durante 7 días en momentos clave, para ver patrones y no números sueltos.</p>
+      <div id="planInfo"></div>
+      <div class="row noprint" style="margin-top:10px;flex-wrap:wrap">
+        <label style="margin:0;flex:1;min-width:150px">Inicio del plan<input type="date" id="planStart" onchange="setPlanStart(this.value)"></label>
+        <button class="btn sm" style="align-self:flex-end" onclick="setPlanStart(isoDate(new Date()))">Empezar hoy</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Registro diario (plantilla)</h2>
+      <div style="overflow-x:auto"><table class="plan" id="planTable"></table></div>
+      <div class="legend">
+        <span><i style="background:var(--ok)"></i>En meta</span>
+        <span><i style="background:var(--warn)"></i>Alto</span>
+        <span><i style="background:var(--bad)"></i>Muy alto</span>
+        <span><i style="background:var(--low)"></i>Bajo</span>
+      </div>
+      <button class="btn sm noprint" style="margin-top:10px" onclick="window.print()">🖨️ Imprimir / guardar PDF</button>
+    </div>
+
+    <div class="card">
+      <h2>Los momentos clave</h2>
+      <div id="momentsHelp"></div>
+    </div>
+
+    <div class="card">
+      <h2>🥗 Guía de alimentación</h2>
+      <div id="foodGuide"></div>
+    </div>
+  </section>
+
+  <!-- ============ ESTADÍSTICAS ============ -->
+  <section id="v-est" class="hidden">
+    <div class="card noprint">
+      <div class="chips" id="statRange"></div>
+    </div>
+    <div class="card">
+      <h2>Resumen</h2>
+      <div class="kpis" id="kpis"></div>
+      <div style="margin-top:12px">
+        <div class="muted" style="margin-bottom:4px">Tiempo en meta</div>
+        <div class="bar" id="tirBar"></div>
+        <div class="legend" id="tirLegend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Tendencia</h2>
+      <div id="chart"></div>
+      <div class="legend" id="chartLegend"></div>
+    </div>
+    <div class="card">
+      <h2>Promedio por momento</h2>
+      <div id="byMoment"></div>
+    </div>
+    <div class="card">
+      <h2>Patrones detectados</h2>
+      <div id="patterns"></div>
+    </div>
+    <div class="card">
+      <h2>Efecto de las comidas (pre → pos)</h2>
+      <div id="mealEffect"></div>
+    </div>
+    <button class="btn big noprint" onclick="window.print()">🖨️ Informe para el médico (PDF)</button>
+  </section>
+
+  <!-- ============ AJUSTES ============ -->
+  <section id="v-aj" class="hidden">
+    <div class="card">
+      <h2>Mis metas (mg/dL)</h2>
+      <p class="muted" style="margin-top:0">Valores de referencia habituales para adultos con diabetes. Ajústalos con tu médico.</p>
+      <div class="grid2">
+        <div><label>Ayunas / antes de comer: mínimo</label><input type="number" id="tPreMin" inputmode="numeric"></div>
+        <div><label>Ayunas / antes de comer: máximo</label><input type="number" id="tPreMax" inputmode="numeric"></div>
+        <div><label>2 h después de comer: máximo</label><input type="number" id="tPostMax" inputmode="numeric"></div>
+        <div><label>Antes de dormir: máximo</label><input type="number" id="tBedMax" inputmode="numeric"></div>
+        <div><label>Hipoglucemia (menor a)</label><input type="number" id="tLow" inputmode="numeric"></div>
+        <div><label>Muy alto (mayor a)</label><input type="number" id="tVHigh" inputmode="numeric"></div>
+      </div>
+      <button class="btn pri" style="margin-top:12px" onclick="saveTargets()">Guardar metas</button>
+    </div>
+
+    <div class="card">
+      <h2>Recordatorios</h2>
+      <p class="muted" style="margin-top:0">La app avisa mientras está abierta o en segundo plano reciente. Para no fallar ninguna medición, crea también alarmas en el reloj del teléfono a estas horas.</p>
+      <div class="grid2" id="remTimes"></div>
+      <button class="btn" style="margin-top:12px" onclick="enableNotif()">🔔 Activar notificaciones</button>
+      <button class="btn" style="margin-top:12px" onclick="saveReminders()">Guardar horas</button>
+    </div>
+
+    <div class="card">
+      <h2>🤖 Asistente IA (opcional)</h2>
+      <p class="muted" style="margin-top:0">Con una clave de IA, la app lee el número de la foto del glucómetro, reconoce el plato y te da recomendaciones personalizadas. Sin clave, igual recibes las recomendaciones integradas. La clave queda guardada solo en este teléfono; al analizar, las fotos y los datos de esa medición se envían al proveedor elegido.</p>
+      <label>Proveedor</label>
+      <select id="aiProv" onchange="aiProvHelp()">
+        <option value="gemini">Google Gemini (gratis)</option>
+        <option value="claude">Anthropic Claude (pago por uso)</option>
+      </select>
+      <label>Clave de API</label>
+      <input type="password" id="aiKey" placeholder="Pega aquí tu clave" autocomplete="off">
+      <label>Modelo</label>
+      <div class="row"><input type="text" id="aiModel" list="aiModels" style="flex:1"><button class="btn sm" onclick="detectModels()">Detectar</button></div>
+      <datalist id="aiModels"></datalist>
+      <div class="row" style="margin-top:10px">
+        <button class="btn pri" onclick="saveAI()">Guardar</button>
+        <button class="btn" onclick="testAI()">Probar</button>
+        <button class="btn danger" onclick="document.getElementById('aiKey').value='';saveAI()">Quitar clave</button>
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:8px" id="aiHelp"></div>
+    </div>
+
+    <div class="card">
+      <h2>Datos</h2>
+      <p class="muted" style="margin-top:0">Todo se guarda solo en este teléfono (no se sube a internet). Haz una copia de seguridad de vez en cuando.</p>
+      <div class="grid2">
+        <button class="btn" onclick="exportCSV()">📄 Exportar Excel (CSV)</button>
+        <button class="btn" onclick="exportBackup()">💾 Copia de seguridad</button>
+        <button class="btn" onclick="document.getElementById('impFile').click()">📥 Restaurar copia</button>
+        <button class="btn danger" onclick="wipeAll()">🗑️ Borrar todo</button>
+      </div>
+      <input type="file" id="impFile" accept=".json,application/json" class="hidden" onchange="importBackup(this.files[0])">
+      <div class="muted" id="storageInfo" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Instalar en el teléfono</h2>
+      <p class="muted" style="margin:0">Android (Chrome): menú ⋮ → <b>Instalar aplicación</b> o <b>Agregar a pantalla principal</b>.<br>iPhone (Safari): botón Compartir → <b>Agregar a inicio</b>.</p>
+      <button class="btn pri hidden" id="installBtn" style="margin-top:10px" onclick="doInstall()">📲 Instalar ahora</button>
+    </div>
+
+    <p class="foot">Mi Glucosa · Herramienta de registro personal. No sustituye la indicación de tu médico.<br>v<span id="ver"></span></p>
+  </section>
+</main>
+
+<nav>
+  <button data-v="hoy" class="on" onclick="go('hoy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>Hoy</button>
+  <button data-v="reg" onclick="go('reg')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Registro</button>
+  <button data-v="plan" onclick="go('plan')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Plan 7 días</button>
+  <button data-v="est" onclick="go('est')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Análisis</button>
+  <button data-v="aj" onclick="go('aj')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ajustes</button>
+</nav>
+
+<!-- ============ MODAL NUEVA MEDICIÓN ============ -->
+<div class="modal" id="mNew" onclick="if(event.target===this)closeNew()">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 style="margin:0 0 10px" id="mNewTitle">Nueva medición</h2>
+
+    <div class="photo-box" id="photoBox" onclick="document.getElementById('photoIn').click()">
+      <div class="ph" id="photoPh">📷<br><b>Toca para tomar la foto del glucómetro</b><br><span class="muted">o elegir de la galería</span></div>
+      <img id="photoPrev" class="hidden" alt="Foto del glucómetro">
+    </div>
+    <input type="file" id="photoIn" accept="image/*" capture="environment" class="hidden" onchange="onPhoto(this.files[0])">
+    <div class="row" style="margin-top:6px">
+      <button class="btn sm" onclick="document.getElementById('photoGal').click()">🖼️ Galería</button>
+      <button class="btn sm danger hidden" id="photoDel" onclick="clearPhoto()">Quitar foto</button>
+    </div>
+    <input type="file" id="photoGal" accept="image/*" class="hidden" onchange="onPhoto(this.files[0])">
+
+    <label>Valor que marca el glucómetro (mg/dL)</label>
+    <input type="number" id="fVal" inputmode="numeric" placeholder="Ej. 152" style="font-size:28px;font-weight:700;text-align:center" oninput="previewLevel()">
+    <div id="fAlert"></div>
+
+    <label>Momento de la medición</label>
+    <div class="chips" id="fMoment"></div>
+    <div class="muted" id="fMomentHelp" style="margin-top:6px"></div>
+
+    <div class="grid2">
+      <div><label>Fecha</label><input type="date" id="fDate"></div>
+      <div><label>Hora</label><input type="time" id="fTime"></div>
+    </div>
+
+    <div id="postBlock" class="hidden">
+      <label>¿A qué hora empezaste a comer?</label>
+      <input type="time" id="fMealStart" oninput="previewLevel()">
+      <div class="muted" id="fMealDiff" style="margin-top:4px"></div>
+    </div>
+
+    <label>¿Qué comiste? / comida relacionada</label>
+    <textarea id="fFood" placeholder="Ej. carne, queso y ensalada" oninput="previewLevel()"></textarea>
+    <div class="row" style="margin-top:6px;align-items:flex-start">
+      <button class="btn sm" onclick="document.getElementById('foodIn').click()">🍽️ Foto del plato (opcional)</button>
+      <img id="foodPrev" class="thumb hidden" alt="Foto del plato">
+      <button class="btn sm danger hidden" id="foodDel" onclick="clearFoodPhoto()">✕</button>
+    </div>
+    <input type="file" id="foodIn" accept="image/*" capture="environment" class="hidden" onchange="onFoodPhoto(this.files[0])">
+
+    <div id="fReco"></div>
+    <button class="btn big" id="aiBtn" style="margin-top:8px" onclick="runAI()">🤖 Analizar fotos con IA y recomendar</button>
+    <div id="aiOut"></div>
+
+    <label>Etiquetas</label>
+    <div class="chips" id="fTags"></div>
+
+    <label>Notas</label>
+    <textarea id="fNotes" placeholder="Síntomas, medicamento, ejercicio, estrés, sueño…"></textarea>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn" style="flex:1" onclick="closeNew()">Cancelar</button>
+      <button class="btn pri" style="flex:2" onclick="saveEntry()">Guardar</button>
+    </div>
+    <button class="btn danger hidden" id="fDelete" style="width:100%;margin-top:10px" onclick="deleteEntry()">Eliminar esta medición</button>
+  </div>
+</div>
+
+<!-- ============ MODAL VER FOTO ============ -->
+<div class="modal" id="mView" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="sheet" id="viewBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const VERSION = '1.1.0';
+document.getElementById('ver').textContent = VERSION;
+
+/* ---------- Momentos ---------- */
+const MOMENTS = [
+  {id:'ayunas', name:'En ayunas', short:'Ayunas', icon:'🌅', key:true,
+   help:'Al despertar, antes de comer o tomar algo distinto a agua o infusiones sin azúcar. Muestra tu nivel basal tras la noche.'},
+  {id:'pre', name:'Antes de la comida principal', short:'Pre', icon:'🍽️', key:true,
+   help:'Justo antes de tu comida más fuerte o de romper el ayuno.'},
+  {id:'post', name:'2 h después de comer', short:'Pos 2h', icon:'⏱️', key:true,
+   help:'2 horas después de EMPEZAR a comer, idealmente tras la comida con más carbohidratos/proteínas.'},
+  {id:'dormir', name:'Antes de dormir', short:'Dormir', icon:'🌙', key:false,
+   help:'Opcional (4.ª medición). Ayuda a ver cómo terminas el día y anticipar la glucosa de la mañana.'},
+  {id:'otra', name:'Otra / extra', short:'Otra', icon:'➕', key:false,
+   help:'Por síntomas, después de ejercicio, tras otra comida, etc.'}
+];
+const M = Object.fromEntries(MOMENTS.map(m=>[m.id,m]));
+const TAGS = ['Medicamento tomado','Ejercicio','Estrés','Durmió mal','Enfermo/a','Comida alta en carbohidratos','Síntomas'];
+
+/* ---------- Ajustes ---------- */
+const DEF_TARGETS = {preMin:80, preMax:130, postMax:180, bedMax:150, low:70, vhigh:250};
+const DEF_REM = {ayunas:'06:30', pre:'12:00', post:'14:00', dormir:'21:30'};
+const LS = {
+  get(k,d){try{const v=localStorage.getItem('glu_'+k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('glu_'+k,JSON.stringify(v))}catch(e){}}
+};
+let T = Object.assign({}, DEF_TARGETS, LS.get('targets',{}));
+let REM = Object.assign({}, DEF_REM, LS.get('rem',{}));
+
+/* ---------- IndexedDB ---------- */
+let db;
+function openDB(){
+  return new Promise((res,rej)=>{
+    const r = indexedDB.open('miglucosa',1);
+    r.onupgradeneeded = e=>{
+      const d = e.target.result;
+      const s = d.createObjectStore('entries',{keyPath:'id'});
+      s.createIndex('ts','ts');
+    };
+    r.onsuccess = e=>{db=e.target.result;res(db)};
+    r.onerror = e=>rej(e);
+  });
+}
+function tx(mode){return db.transaction('entries',mode).objectStore('entries')}
+function allEntries(){return new Promise(res=>{const r=tx('readonly').getAll();r.onsuccess=()=>res(r.result.sort((a,b)=>b.ts-a.ts))})}
+function putEntry(e){return new Promise((res,rej)=>{const r=tx('readwrite').put(e);r.onsuccess=()=>res();r.onerror=rej})}
+function delEntry(id){return new Promise(res=>{const r=tx('readwrite').delete(id);r.onsuccess=()=>res()})}
+function clearEntries(){return new Promise(res=>{const r=tx('readwrite').clear();r.onsuccess=()=>res()})}
+
+let ENTRIES = [];
+async function reload(){ENTRIES = await allEntries(); renderAll();}
+
+/* ---------- Utilidades ---------- */
+const pad = n=>String(n).padStart(2,'0');
+const isoDate = d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const hhmm = d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmtDay = d=>d.toLocaleDateString('es-NI',{weekday:'long',day:'numeric',month:'long'});
+const fmtShort = d=>d.toLocaleDateString('es-NI',{weekday:'short',day:'numeric',month:'short'});
+const fmtTime = d=>d.toLocaleTimeString('es-NI',{hour:'numeric',minute:'2-digit'});
+const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2200)}
+function dayKey(ts){return isoDate(new Date(ts))}
+const avg = a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:null;
+
+function level(v, moment){
+  if(v==null||isNaN(v)) return null;
+  if(v < T.low) return 'low';
+  if(v > T.vhigh) return 'vhigh';
+  let max = T.preMax;
+  if(moment==='post') max = T.postMax;
+  else if(moment==='dormir') max = T.bedMax;
+  else if(moment==='otra') max = T.postMax;
+  return v > max ? 'high' : 'ok';
+}
+const LV_TXT = {ok:'En meta', high:'Alto', vhigh:'Muy alto', low:'Bajo'};
+const LV_COL = {ok:'var(--ok)', high:'var(--warn)', vhigh:'var(--bad)', low:'var(--low)'};
+
+function suggestMoment(d, dayEntries){
+  const h = d.getHours() + d.getMinutes()/60;
+  const has = id=>dayEntries.some(e=>e.moment===id);
+  const meal = LS.get('meal',null);
+  if(meal && Date.now()-meal > 90*60000 && Date.now()-meal < 4*3600000) return 'post';
+  if(h < 10 && !has('ayunas')) return 'ayunas';
+  if(h >= 20.5) return has('dormir') ? 'otra' : 'dormir';
+  if(!has('pre')) return 'pre';
+  if(!has('post')) return 'post';
+  return 'otra';
+}
+
+/* ---------- Navegación ---------- */
+let VIEW='hoy';
+function go(v){
+  VIEW=v;
+  document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById('v-'+v).classList.remove('hidden');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  window.scrollTo(0,0);
+  renderAll();
+}
+
+/* ---------- Render ---------- */
+function renderAll(){
+  if(VIEW==='hoy') renderToday();
+  if(VIEW==='reg') renderLog();
+  if(VIEW==='plan') renderPlan();
+  if(VIEW==='est') renderStats();
+  if(VIEW==='aj') renderSettings();
+  renderTimer();
+}
+
+function valBadge(e){
+  const lv = level(e.value,e.moment);
+  return `<span class="val lv-${lv}">${e.value}</span>`;
+}
+
+function renderToday(){
+  const now = new Date(), key = isoDate(now);
+  document.getElementById('todayTitle').textContent = 'Hoy · ' + now.toLocaleDateString('es-NI',{weekday:'long',day:'numeric',month:'short'});
+  const day = ENTRIES.filter(e=>dayKey(e.ts)===key);
+  const keyDone = ['ayunas','pre','post'].filter(id=>day.some(e=>e.moment===id)).length;
+  document.getElementById('todayCount').textContent = `${keyDone}/3 clave · ${day.length} total`;
+  document.getElementById('todayProg').style.width = Math.min(100,keyDone/3*100)+'%';
+  document.getElementById('slots').innerHTML = MOMENTS.filter(m=>m.id!=='otra').map(m=>{
+    const es = day.filter(e=>e.moment===m.id);
+    const last = es[0];
+    const right = last
+      ? `${valBadge(last)}`
+      : `<button class="btn sm" onclick="openNew('${m.id}')">Medir</button>`;
+    const sub = last ? `${fmtTime(new Date(last.ts))} · ${LV_TXT[level(last.value,m.id)]}${last.photo?' · 📷':''}`
+                     : (m.key ? 'Pendiente' : 'Opcional') + (REM[m.id]?` · sugerido ${REM[m.id]}`:'');
+    return `<div class="slot" ${last?`onclick="viewEntry('${last.id}')"`:''}>
+      <div class="dot" style="${last?`background:${LV_COL[level(last.value,m.id)]};color:#fff`:''}">${last?'✓':m.icon}</div>
+      <div class="t"><b>${m.name}</b><span class="muted">${sub}</span></div>${right}</div>`;
+  }).join('');
+
+  // semana
+  const ps = planStart();
+  const wk = document.getElementById('weekSummary');
+  if(!ps){
+    wk.innerHTML = `<p class="muted" style="margin-top:0">Aún no has iniciado tu semana de registro.</p>
+      <button class="btn pri" onclick="setPlanStart(isoDate(new Date()));renderToday()">Iniciar plan hoy</button>`;
+  } else {
+    const days = planDays(ps);
+    const idx = days.findIndex(d=>isoDate(d)===key);
+    let full=0, keyMeas=0;
+    days.forEach(d=>{
+      const k=isoDate(d), de=ENTRIES.filter(e=>dayKey(e.ts)===k);
+      const n=['ayunas','pre','post'].filter(id=>de.some(e=>e.moment===id)).length;
+      keyMeas+=n; if(n===3) full++;
+    });
+    const status = idx>=0 ? `Día ${idx+1} de 7` : (new Date()<days[0] ? 'Empieza el '+fmtShort(days[0]) : 'Plan terminado');
+    wk.innerHTML = `<div class="row" style="justify-content:space-between"><b>${status}</b><span class="muted">${keyMeas}/21 mediciones clave</span></div>
+      <div class="progress" style="margin:8px 0"><i style="width:${keyMeas/21*100}%"></i></div>
+      <div class="row" style="gap:4px">${days.map(d=>{
+        const k=isoDate(d), de=ENTRIES.filter(e=>dayKey(e.ts)===k);
+        const n=['ayunas','pre','post'].filter(id=>de.some(e=>e.moment===id)).length;
+        const bg = n===3?'var(--ok)':n>0?'var(--pri2)':'var(--line)';
+        return `<div style="flex:1;text-align:center"><div style="height:28px;border-radius:8px;background:${bg};color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;${k===key?'outline:2px solid var(--pri);outline-offset:2px':''}">${n}/3</div><div class="muted" style="font-size:10px;margin-top:3px">${d.toLocaleDateString('es-NI',{weekday:'short'}).slice(0,3)}</div></div>`;
+      }).join('')}</div>
+      ${idx<0 && new Date()>days[6] ? `<button class="btn" style="margin-top:10px" onclick="go('est')">Ver análisis de la semana</button>`:''}`;
+  }
+
+  const ll = document.getElementById('lastList');
+  ll.innerHTML = ENTRIES.length ? ENTRIES.slice(0,5).map(entryRow).join('') : '<p class="muted">Todavía no hay mediciones. Toca <b>Nueva medición con foto</b>.</p>';
+  hydrateThumbs(ll);
+}
+
+function entryRow(e){
+  const d = new Date(e.ts);
+  return `<div class="entry" onclick="viewEntry('${e.id}')">
+    ${e.photo?`<img class="thumb" data-id="${e.id}">`:`<div class="thumb" style="display:grid;place-items:center;font-size:22px">${M[e.moment]?.icon||'•'}</div>`}
+    <div class="info"><b>${M[e.moment]?.name||e.moment}</b><div>${fmtShort(d)} · ${fmtTime(d)}${e.food?' · '+esc(e.food):''}</div></div>
+    ${valBadge(e)}</div>`;
+}
+const urlCache = {};
+function photoURL(e){
+  if(!e.photo) return null;
+  if(!urlCache[e.id]) urlCache[e.id] = URL.createObjectURL(e.photo);
+  return urlCache[e.id];
+}
+function hydrateThumbs(root){
+  root.querySelectorAll('img.thumb[data-id]').forEach(img=>{
+    const e = ENTRIES.find(x=>x.id===img.dataset.id); if(e) img.src = photoURL(e);
+  });
+}
+
+function renderLog(){
+  const sel = document.getElementById('fltMoment');
+  if(sel.options.length===1) MOMENTS.forEach(m=>sel.add(new Option(m.name,m.id)));
+  const mom = sel.value, days = +document.getElementById('fltRange').value;
+  const from = days ? Date.now()-days*86400000 : 0;
+  const list = ENTRIES.filter(e=>(!mom||e.moment===mom)&&e.ts>=from);
+  const box = document.getElementById('logList');
+  if(!list.length){box.innerHTML='<div class="card"><p class="muted" style="margin:0">Sin mediciones en este periodo.</p></div>';return}
+  const groups = {};
+  list.forEach(e=>{(groups[dayKey(e.ts)] ||= []).push(e)});
+  box.innerHTML = Object.keys(groups).sort().reverse().map(k=>{
+    const es = groups[k], a = Math.round(avg(es.map(e=>e.value)));
+    return `<div class="day-h">${fmtDay(new Date(k+'T12:00'))} · prom. ${a}</div><div class="card" style="padding:4px 14px">${es.map(entryRow).join('')}</div>`;
+  }).join('');
+  hydrateThumbs(box);
+}
+
+/* ---------- Plan ---------- */
+function planStart(){return LS.get('planStart',null)}
+function setPlanStart(v){LS.set('planStart',v);document.getElementById('planStart').value=v;toast('Plan de 7 días: inicio '+v);renderAll()}
+function planDays(start){
+  const d0 = new Date(start+'T00:00');
+  return Array.from({length:7},(_,i)=>{const d=new Date(d0);d.setDate(d0.getDate()+i);return d});
+}
+function renderPlan(){
+  let ps = planStart();
+  document.getElementById('planStart').value = ps || '';
+  const days = ps ? planDays(ps) : planDays(isoDate(new Date()));
+  document.getElementById('planInfo').innerHTML = ps ? '' : '<div class="alert info">Elige la fecha de inicio. Mientras tanto se muestra la semana desde hoy.</div>';
+  const cols = ['ayunas','pre','post','dormir'];
+  let html = `<tr><th>Día</th>${cols.map(c=>`<th>${M[c].icon} ${M[c].short}</th>`).join('')}<th>Comida / notas</th></tr>`;
+  const sums = {ayunas:[],pre:[],post:[],dormir:[]};
+  days.forEach((d,i)=>{
+    const k = isoDate(d), de = ENTRIES.filter(e=>dayKey(e.ts)===k);
+    const notes = de.map(e=>[e.food,e.notes].filter(Boolean).join('; ')).filter(Boolean).join(' | ');
+    html += `<tr><td class="d">${i+1}. ${fmtShort(d)}</td>${cols.map(c=>{
+      const e = de.filter(x=>x.moment===c).sort((a,b)=>a.ts-b.ts)[0];
+      if(!e) return '<td class="muted">—</td>';
+      sums[c].push(e.value);
+      const lv = level(e.value,c);
+      return `<td style="color:${LV_COL[lv]};font-weight:700;cursor:pointer" onclick="viewEntry('${e.id}')">${e.value}<div style="font-size:10px;font-weight:400;color:var(--muted)">${hhmm(new Date(e.ts))}</div></td>`;
+    }).join('')}<td style="text-align:left;font-size:11px">${esc(notes).slice(0,120)}</td></tr>`;
+  });
+  html += `<tr><td class="d">Promedio</td>${cols.map(c=>{const a=avg(sums[c]);return `<td><b>${a?Math.round(a):'—'}</b></td>`}).join('')}<td></td></tr>`;
+  document.getElementById('planTable').innerHTML = html;
+  document.getElementById('momentsHelp').innerHTML = MOMENTS.slice(0,4).map((m,i)=>`
+    <div class="slot"><div class="dot">${m.icon}</div><div class="t"><b>Medición ${i+1} — ${m.name}${m.key?'':' (opcional)'}</b>
+    <span class="muted">${m.help}</span><div style="font-size:12px;margin-top:3px">Meta: ${metaTxt(m.id)}</div></div></div>`).join('');
+  document.getElementById('foodGuide').innerHTML = foodGuideHTML();
+}
+function metaTxt(id){
+  if(id==='post') return `menos de ${T.postMax} mg/dL`;
+  if(id==='dormir') return `${T.preMin}–${T.bedMax} mg/dL`;
+  return `${T.preMin}–${T.preMax} mg/dL`;
+}
+
+/* ---------- Estadísticas ---------- */
+let STAT_DAYS = 7;
+function renderStats(){
+  const opts = [[7,'7 días'],[14,'14 días'],[30,'30 días'],[90,'90 días'],[0,'Todo']];
+  if(planStart()) opts.unshift(['plan','Semana del plan']);
+  document.getElementById('statRange').innerHTML = opts.map(([v,t])=>`<button class="chip ${String(STAT_DAYS)===String(v)?'on':''}" onclick="STAT_DAYS='${v}'==='plan'?'plan':+'${v}';renderStats()">${t}</button>`).join('');
+  let list;
+  if(STAT_DAYS==='plan'){
+    const ds = planDays(planStart()), a=ds[0].getTime(), b=ds[6].getTime()+86400000;
+    list = ENTRIES.filter(e=>e.ts>=a&&e.ts<b);
+  } else {
+    const from = STAT_DAYS ? Date.now()-STAT_DAYS*86400000 : 0;
+    list = ENTRIES.filter(e=>e.ts>=from);
+  }
+  const vals = list.map(e=>e.value);
+  const k = document.getElementById('kpis');
+  if(!list.length){
+    k.innerHTML = '<p class="muted" style="grid-column:1/-1">Sin datos en este periodo.</p>';
+    ['tirBar','tirLegend','chart','chartLegend','byMoment','patterns','mealEffect'].forEach(id=>document.getElementById(id).innerHTML='');
+    return;
+  }
+  const a = avg(vals);
+  const sd = Math.sqrt(avg(vals.map(v=>(v-a)**2)));
+  const cnt = {ok:0,high:0,vhigh:0,low:0};
+  list.forEach(e=>cnt[level(e.value,e.moment)]++);
+  const daysWith = new Set(list.map(e=>dayKey(e.ts))).size;
+  k.innerHTML = `
+    <div class="kpi"><b>${Math.round(a)}</b><span>Promedio mg/dL</span></div>
+    <div class="kpi"><b>${Math.round(cnt.ok/list.length*100)}%</b><span>En meta</span></div>
+    <div class="kpi"><b>${list.length}</b><span>Mediciones · ${daysWith} días</span></div>
+    <div class="kpi"><b>${Math.min(...vals)}</b><span>Mínimo</span></div>
+    <div class="kpi"><b>${Math.max(...vals)}</b><span>Máximo</span></div>
+    <div class="kpi"><b>${Math.round(sd/a*100)}%</b><span>Variabilidad (CV)</span></div>`;
+  const pct = x=>x/list.length*100;
+  document.getElementById('tirBar').innerHTML = ['low','ok','high','vhigh'].map(l=>`<i style="width:${pct(cnt[l])}%;background:${LV_COL[l]}"></i>`).join('');
+  document.getElementById('tirLegend').innerHTML = ['low','ok','high','vhigh'].map(l=>`<span><i style="background:${LV_COL[l]}"></i>${LV_TXT[l]} ${Math.round(pct(cnt[l]))}%</span>`).join('');
+
+  drawChart(list.slice().sort((x,y)=>x.ts-y.ts));
+
+  // por momento
+  document.getElementById('byMoment').innerHTML = MOMENTS.map(m=>{
+    const v = list.filter(e=>e.moment===m.id).map(e=>e.value);
+    if(!v.length) return '';
+    const av = Math.round(avg(v)), lv = level(av,m.id);
+    const w = Math.min(100, av/300*100);
+    return `<div style="margin:10px 0"><div class="row" style="justify-content:space-between"><span>${m.icon} ${m.name} <span class="muted">(${v.length})</span></span><span class="val lv-${lv}" style="font-size:15px">${av}</span></div>
+      <div class="progress" style="margin-top:5px"><i style="width:${w}%;background:${LV_COL[lv]}"></i></div>
+      <div class="muted" style="font-size:11px;margin-top:2px">Rango ${Math.min(...v)}–${Math.max(...v)} · meta ${metaTxt(m.id)}</div></div>`;
+  }).join('');
+
+  // patrones
+  const P = [];
+  const byM = id=>list.filter(e=>e.moment===id).map(e=>e.value);
+  const ay = byM('ayunas'), pr = byM('pre'), po = byM('post'), dm = byM('dormir');
+  if(ay.length>=3){
+    const hi = ay.filter(v=>v>T.preMax).length;
+    if(hi/ay.length>=0.5) P.push(['warn',`🌅 Tus mediciones <b>en ayunas</b> están altas en ${hi} de ${ay.length} días (prom. ${Math.round(avg(ay))}). Es un dato clave para comentar con tu médico.`]);
+    else P.push(['ok',`🌅 Ayunas mayormente en meta (prom. ${Math.round(avg(ay))}).`]);
+  }
+  if(po.length>=3){
+    const hi = po.filter(v=>v>T.postMax).length;
+    if(hi/po.length>=0.4) P.push(['warn',`⏱️ Después de comer superas ${T.postMax} en ${hi} de ${po.length} mediciones. Revisa porciones y carbohidratos en esas comidas.`]);
+    else P.push(['ok',`⏱️ Posprandiales controlados en ${po.length-hi} de ${po.length} mediciones.`]);
+  }
+  if(cnt.low) P.push(['low',`⚠️ Tuviste ${cnt.low} lectura(s) por debajo de ${T.low} mg/dL. Informa a tu médico; puede requerir ajustar tratamiento.`]);
+  if(cnt.vhigh) P.push(['bad',`🔺 ${cnt.vhigh} lectura(s) por encima de ${T.vhigh} mg/dL.`]);
+  if(ay.length && dm.length){
+    const d = Math.round(avg(ay)-avg(dm));
+    if(Math.abs(d)>=20) P.push(['info',`🌙→🌅 La glucosa de la mañana es en promedio ${Math.abs(d)} mg/dL ${d>0?'más alta':'más baja'} que antes de dormir.`]);
+  }
+  if(sd/a>0.36) P.push(['warn',`📈 Variabilidad alta (CV ${Math.round(sd/a*100)}%). Mientras más estables los valores, mejor.`]);
+  if(STAT_DAYS==='plan'){
+    const need = 21, got = list.filter(e=>['ayunas','pre','post'].includes(e.moment)).length;
+    P.push([got>=need?'ok':'info',`📋 Cumplimiento del plan: ${got} de ${need} mediciones clave.`]);
+  }
+  document.getElementById('patterns').innerHTML = P.length ? P.map(([c,t])=>`<div class="alert ${c}">${t}</div>`).join('') : '<p class="muted">Registra al menos 3 días de cada momento para detectar patrones.</p>';
+
+  // efecto de comidas: pares pre→post del mismo día
+  const pairs = [];
+  const byDay = {};
+  list.forEach(e=>{(byDay[dayKey(e.ts)] ||= []).push(e)});
+  Object.entries(byDay).forEach(([k,es])=>{
+    es.filter(e=>e.moment==='post').forEach(p=>{
+      const pre = es.filter(e=>(e.moment==='pre'||e.moment==='ayunas') && e.ts<p.ts).sort((a,b)=>b.ts-a.ts)[0];
+      if(pre) pairs.push({k,pre,post:p});
+    });
+  });
+  document.getElementById('mealEffect').innerHTML = pairs.length ? pairs.sort((a,b)=>b.post.ts-a.post.ts).map(({pre,post})=>{
+    const d = post.value-pre.value;
+    const c = d>60?'var(--bad)':d>40?'var(--warn)':'var(--ok)';
+    return `<div class="entry"><div class="info"><b>${fmtShort(new Date(post.ts))}</b><div>${esc(post.food||pre.food||'(sin detalle de comida)')}</div></div>
+      <span class="muted">${pre.value} → ${post.value}</span><span class="val" style="color:${c}">${d>0?'+':''}${d}</span></div>`;
+  }).join('') + `<p class="muted" style="font-size:12px">Una subida de hasta ~40–60 mg/dL tras la comida suele considerarse aceptable; si sube más, esa comida es la que conviene ajustar.</p>`
+  : '<p class="muted">Registra una medición antes y otra 2 h después de la misma comida para ver cuánto te sube cada comida.</p>';
+}
+
+function drawChart(list){
+  const W=700,H=300,pl=46,pr=10,pt=10,pb=30;
+  const t0=list[0].ts, t1=list[list.length-1].ts||t0+1, span=Math.max(t1-t0,3600000);
+  const vmax=Math.max(300,Math.max(...list.map(e=>e.value))+20), vmin=40;
+  const x=t=>pl+(t-t0)/span*(W-pl-pr), y=v=>pt+(1-(v-vmin)/(vmax-vmin))*(H-pt-pb);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  s+=`<rect x="${pl}" y="${y(T.preMax)}" width="${W-pl-pr}" height="${y(T.preMin)-y(T.preMax)}" fill="var(--ok)" opacity=".12"/>`;
+  [[T.low,'var(--low)'],[T.postMax,'var(--warn)'],[T.vhigh,'var(--bad)']].forEach(([v,c])=>s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="${c}" stroke-dasharray="4 4" opacity=".7"/>`);
+  for(let v=50;v<=vmax;v+=50) s+=`<text x="${pl-6}" y="${y(v)+4}" font-size="17" text-anchor="end" fill="var(--muted)">${v}</text>`;
+  // etiquetas de días
+  const seen=new Set();
+  list.forEach(e=>{const k=dayKey(e.ts);if(seen.has(k))return;seen.add(k);const d=new Date(k+'T00:00');if(d.getTime()<t0)return;
+    s+=`<line x1="${x(d.getTime())}" x2="${x(d.getTime())}" y1="${pt}" y2="${H-pb}" stroke="var(--line)"/>`;
+    if(seen.size<=14||seen.size%3===0) s+=`<text x="${x(d.getTime())+3}" y="${H-8}" font-size="16" fill="var(--muted)">${d.getDate()}/${d.getMonth()+1}</text>`;});
+  if(list.length>1) s+=`<polyline fill="none" stroke="var(--pri2)" stroke-width="2" opacity=".6" points="${list.map(e=>`${x(e.ts)},${y(e.value)}`).join(' ')}"/>`;
+  const shape={ayunas:'circle',pre:'rect',post:'tri',dormir:'circle',otra:'rect'};
+  list.forEach(e=>{
+    const cx=x(e.ts), cy=y(e.value), c=LV_COL[level(e.value,e.moment)];
+    if(e.moment==='post') s+=`<path d="M${cx},${cy-6}L${cx+6},${cy+5}L${cx-6},${cy+5}Z" fill="${c}"/>`;
+    else if(e.moment==='pre'||e.moment==='otra') s+=`<rect x="${cx-5}" y="${cy-5}" width="10" height="10" fill="${c}"/>`;
+    else s+=`<circle cx="${cx}" cy="${cy}" r="5.5" fill="${e.moment==='dormir'?'var(--card)':c}" stroke="${c}" stroke-width="2.5"/>`;
+  });
+  s+='</svg>';
+  document.getElementById('chart').innerHTML=s;
+  document.getElementById('chartLegend').innerHTML='<span>● Ayunas</span><span>■ Antes de comer / otra</span><span>▲ 2 h después</span><span>○ Antes de dormir</span><span><i style="background:var(--ok);opacity:.4;border-radius:2px"></i>Meta en ayunas</span>';
+}
+
+/* ---------- Ajustes ---------- */
+function renderSettings(){
+  const map={tPreMin:'preMin',tPreMax:'preMax',tPostMax:'postMax',tBedMax:'bedMax',tLow:'low',tVHigh:'vhigh'};
+  Object.entries(map).forEach(([i,k])=>document.getElementById(i).value=T[k]);
+  document.getElementById('remTimes').innerHTML = ['ayunas','pre','post','dormir'].map(id=>`<div><label>${M[id].icon} ${M[id].name}</label><input type="time" data-rem="${id}" value="${REM[id]||''}"></div>`).join('');
+  document.getElementById('aiProv').value=AI.prov; document.getElementById('aiKey').value=AI.key; document.getElementById('aiModel').value=AI.model; aiProvHelp();
+  const n = ENTRIES.length, p = ENTRIES.filter(e=>e.photo).length;
+  document.getElementById('storageInfo').textContent = `${n} mediciones guardadas · ${p} con foto.`;
+  if(navigator.storage?.estimate) navigator.storage.estimate().then(s=>{document.getElementById('storageInfo').textContent += ` Espacio usado: ${(s.usage/1048576).toFixed(1)} MB.`});
+}
+function saveTargets(){
+  const g=id=>+document.getElementById(id).value;
+  T={preMin:g('tPreMin'),preMax:g('tPreMax'),postMax:g('tPostMax'),bedMax:g('tBedMax'),low:g('tLow'),vhigh:g('tVHigh')};
+  LS.set('targets',T);toast('Metas guardadas');
+}
+function saveReminders(){
+  document.querySelectorAll('[data-rem]').forEach(i=>REM[i.dataset.rem]=i.value);
+  LS.set('rem',REM);toast('Horas guardadas');
+}
+async function enableNotif(){
+  if(!('Notification' in window)){toast('Este navegador no permite notificaciones');return}
+  const p = await Notification.requestPermission();
+  toast(p==='granted'?'Notificaciones activadas':'Permiso no concedido');
+}
+async function notify(title, body){
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  try{
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if(reg) reg.showNotification(title,{body,icon:'icons/icon-192.png',badge:'icons/icon-192.png',vibrate:[200,100,200],tag:title});
+    else new Notification(title,{body});
+  }catch(e){}
+}
+function checkReminders(){
+  const now=new Date(), key=isoDate(now), cur=hhmm(now);
+  const sent=LS.get('remSent',{});
+  const day=ENTRIES.filter(e=>dayKey(e.ts)===key);
+  ['ayunas','pre','dormir'].forEach(id=>{
+    if(!REM[id]||sent[key+id]) return;
+    if(cur>=REM[id] && cur<=addMin(REM[id],60) && !day.some(e=>e.moment===id)){
+      notify('Mi Glucosa: hora de medir', `${M[id].icon} ${M[id].name}`); sent[key+id]=1; LS.set('remSent',sent);
+    }
+  });
+  const meal=LS.get('meal',null);
+  if(meal && Date.now()-meal>=2*3600000 && !sent['meal'+meal]){
+    notify('Mi Glucosa: medición posprandial','Ya pasaron 2 horas desde que empezaste a comer. ¡Mide ahora!');
+    sent['meal'+meal]=1; LS.set('remSent',sent);
+  }
+}
+function addMin(t,m){const [h,mm]=t.split(':').map(Number);const d=new Date();d.setHours(h,mm+m);return hhmm(d)}
+
+/* ---------- Temporizador de comida ---------- */
+function startMeal(){
+  LS.set('meal',Date.now());
+  if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
+  toast('Te avisaré a las 2 h ('+fmtTime(new Date(Date.now()+7200000))+')');
+  renderTimer();
+}
+function cancelMeal(){LS.set('meal',null);renderTimer()}
+function renderTimer(){
+  const meal=LS.get('meal',null), box=document.getElementById('mealTimer');
+  if(!meal || Date.now()-meal>5*3600000){box.classList.add('hidden');return}
+  box.classList.remove('hidden');
+  const left = meal+7200000-Date.now();
+  const el=document.getElementById('mealCount');
+  if(left>0){const m=Math.floor(left/60000), s=Math.floor(left/1000)%60;el.textContent=`Faltan ${Math.floor(m/60)}:${pad(m%60)}:${pad(s)}`}
+  else {el.innerHTML=`¡Ya! <button class="btn sm pri" onclick="openNew('post')">Medir ahora</button>`}
+}
+
+/* ---------- Formulario ---------- */
+let EDIT=null, PHOTO=null, MOMENT=null, TAGSEL=new Set();
+function openNew(moment){
+  EDIT=null; PHOTO=null; TAGSEL=new Set(); AIRESULT=null;
+  clearFoodPhoto(); document.getElementById('aiOut').innerHTML=''; document.getElementById('fReco').innerHTML=''; updateAIBtn();
+  const now=new Date();
+  document.getElementById('mNewTitle').textContent='Nueva medición';
+  document.getElementById('fVal').value='';
+  document.getElementById('fDate').value=isoDate(now);
+  document.getElementById('fTime').value=hhmm(now);
+  document.getElementById('fFood').value='';
+  document.getElementById('fNotes').value='';
+  const meal=LS.get('meal',null);
+  document.getElementById('fMealStart').value = meal ? hhmm(new Date(meal)) : '';
+  document.getElementById('fDelete').classList.add('hidden');
+  clearPhoto();
+  const day=ENTRIES.filter(e=>dayKey(e.ts)===isoDate(now));
+  setMoment(moment||suggestMoment(now,day));
+  renderTags();
+  document.getElementById('fAlert').innerHTML='';
+  document.getElementById('mNew').classList.add('on');
+}
+function closeNew(){document.getElementById('mNew').classList.remove('on')}
+function setMoment(id){
+  MOMENT=id;
+  document.getElementById('fMoment').innerHTML=MOMENTS.map(m=>`<button class="chip ${m.id===id?'on':''}" onclick="setMoment('${m.id}')">${m.icon} ${m.short}</button>`).join('');
+  document.getElementById('fMomentHelp').textContent=M[id].help+' Meta: '+metaTxt(id)+'.';
+  document.getElementById('postBlock').classList.toggle('hidden',id!=='post');
+  previewLevel();
+}
+function renderTags(){
+  document.getElementById('fTags').innerHTML=TAGS.map(t=>`<button class="chip ${TAGSEL.has(t)?'on':''}" onclick="toggleTag(this,'${t}')">${t}</button>`).join('');
+}
+function toggleTag(b,t){TAGSEL.has(t)?TAGSEL.delete(t):TAGSEL.add(t);b.classList.toggle('on')}
+function previewLevel(){
+  const v=+document.getElementById('fVal').value, box=document.getElementById('fAlert');
+  // diferencia posprandial
+  if(MOMENT==='post'){
+    const ms=document.getElementById('fMealStart').value, t=document.getElementById('fTime').value;
+    const out=document.getElementById('fMealDiff');
+    if(ms&&t){
+      let diff=(toMin(t)-toMin(ms)); if(diff<0) diff+=1440;
+      const ok = diff>=105 && diff<=135;
+      out.innerHTML=`Medido ${Math.floor(diff/60)} h ${diff%60} min después de empezar a comer ${ok?'✅':'— lo ideal son 2 h'}`;
+    } else out.textContent='';
+  }
+  const reco=document.getElementById('fReco');
+  if(!v){box.innerHTML='';reco.innerHTML='';return}
+  reco.innerHTML = (v>=20&&v<=600) ? `<div style="margin-top:10px"><b>🥗 Recomendaciones de alimentación</b>${recoHTML(v,MOMENT,document.getElementById('fFood').value)}</div>` : '';
+  const lv=level(v,MOMENT);
+  const msgs={
+    ok:['ok','✅ En meta para este momento.'],
+    high:['warn','⬆️ Por encima de tu meta para este momento. Anota qué comiste o qué pasó para encontrar el patrón.'],
+    vhigh:['bad',`🔺 Muy alto (mayor de ${T.vhigh}). Toma agua, repite la medición y, si persiste o tienes síntomas (mucha sed, orinar mucho, náuseas, visión borrosa, confusión), contacta a tu médico.`],
+    low:['low',`⚠️ Glucosa baja (menor de ${T.low}). Regla 15-15: toma 15 g de azúcar rápida (½ vaso de jugo o gaseosa normal, o 3–4 cucharaditas de azúcar en agua), espera 15 min y vuelve a medir. Si no sube o te sientes mal, busca ayuda.`]
+  };
+  if(v<20||v>600){box.innerHTML='<div class="alert warn">Revisa el valor: parece fuera del rango del glucómetro.</div>';return}
+  box.innerHTML=`<div class="alert ${msgs[lv][0]}">${msgs[lv][1]}</div>`;
+}
+const toMin=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};
+
+function onPhoto(file){
+  if(!file) return;
+  const img=new Image(), url=URL.createObjectURL(file);
+  img.onload=()=>{
+    const max=1280, sc=Math.min(1,max/Math.max(img.width,img.height));
+    const c=document.createElement('canvas'); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    c.toBlob(b=>{
+      PHOTO=b; URL.revokeObjectURL(url);
+      const p=document.getElementById('photoPrev'); p.src=URL.createObjectURL(b); p.classList.remove('hidden');
+      document.getElementById('photoPh').classList.add('hidden');
+      document.getElementById('photoDel').classList.remove('hidden');
+      // usar la hora de la foto si es reciente
+      if(!EDIT && file.lastModified && Math.abs(Date.now()-file.lastModified)<12*3600000 && Date.now()-file.lastModified>5*60000){
+        const d=new Date(file.lastModified);
+        document.getElementById('fDate').value=isoDate(d);document.getElementById('fTime').value=hhmm(d);
+        toast('Se usó la hora de la foto: '+fmtTime(d));
+      }
+      document.getElementById('fVal').focus();
+    },'image/jpeg',0.82);
+  };
+  img.src=url;
+  document.getElementById('photoIn').value='';document.getElementById('photoGal').value='';
+}
+function clearPhoto(){
+  PHOTO=null;
+  const p=document.getElementById('photoPrev'); p.classList.add('hidden'); p.removeAttribute('src');
+  document.getElementById('photoPh').classList.remove('hidden');
+  document.getElementById('photoDel').classList.add('hidden');
+}
+async function saveEntry(){
+  const v=+document.getElementById('fVal').value;
+  if(!v||v<20||v>600){toast('Escribe el valor de glucosa (mg/dL)');document.getElementById('fVal').focus();return}
+  const d=document.getElementById('fDate').value, t=document.getElementById('fTime').value;
+  if(!d||!t){toast('Falta fecha u hora');return}
+  const ts=new Date(d+'T'+t).getTime();
+  const e = EDIT ? Object.assign({},EDIT) : {id:'g'+Date.now()+Math.random().toString(36).slice(2,6), created:Date.now()};
+  Object.assign(e,{ts,value:v,moment:MOMENT,food:document.getElementById('fFood').value.trim(),
+    notes:document.getElementById('fNotes').value.trim(),tags:[...TAGSEL],
+    mealStart: MOMENT==='post' ? (document.getElementById('fMealStart').value||null) : null,
+    photo: PHOTO || null, foodPhoto: FOODPHOTO || null, ai: AIRESULT || e.ai || null});
+  if(urlCache[e.id]){URL.revokeObjectURL(urlCache[e.id]);delete urlCache[e.id]}
+  await putEntry(e);
+  if(MOMENT==='post' && LS.get('meal',null)) LS.set('meal',null);
+  closeNew();
+  const lv=level(v,MOMENT);
+  toast(`Guardado: ${v} mg/dL · ${LV_TXT[lv]}`);
+  if(!planStart()) LS.set('planStart',isoDate(new Date(ts)));
+  await reload();
+  viewEntry(e.id); // muestra la ficha con las recomendaciones
+}
+function editEntry(id){
+  const e=ENTRIES.find(x=>x.id===id); if(!e) return;
+  document.getElementById('mView').classList.remove('on');
+  openNew(e.moment);
+  EDIT=e; TAGSEL=new Set(e.tags||[]); renderTags();
+  document.getElementById('mNewTitle').textContent='Editar medición';
+  const d=new Date(e.ts);
+  document.getElementById('fVal').value=e.value;
+  document.getElementById('fDate').value=isoDate(d);
+  document.getElementById('fTime').value=hhmm(d);
+  document.getElementById('fFood').value=e.food||'';
+  document.getElementById('fNotes').value=e.notes||'';
+  document.getElementById('fMealStart').value=e.mealStart||'';
+  AIRESULT=e.ai||null;
+  if(e.foodPhoto){FOODPHOTO=e.foodPhoto;const fp=document.getElementById('foodPrev');fp.src=URL.createObjectURL(e.foodPhoto);fp.classList.remove('hidden');document.getElementById('foodDel').classList.remove('hidden')}
+  if(e.photo){PHOTO=e.photo;const p=document.getElementById('photoPrev');p.src=photoURL(e);p.classList.remove('hidden');document.getElementById('photoPh').classList.add('hidden');document.getElementById('photoDel').classList.remove('hidden')}
+  document.getElementById('fDelete').classList.remove('hidden');
+  previewLevel();
+}
+async function deleteEntry(){
+  if(!EDIT||!confirm('¿Eliminar esta medición?')) return;
+  await delEntry(EDIT.id); closeNew(); toast('Eliminada'); reload();
+}
+function viewEntry(id){
+  const e=ENTRIES.find(x=>x.id===id); if(!e) return;
+  const d=new Date(e.ts), lv=level(e.value,e.moment);
+  document.getElementById('viewBody').innerHTML=`<div class="grab"></div>
+    ${e.photo?`<img src="${photoURL(e)}" style="width:100%;border-radius:14px;max-height:55vh;object-fit:contain;background:#000">`:''}
+    <div class="big-num" style="color:${LV_COL[lv]}">${e.value} <span style="font-size:16px;font-weight:600">mg/dL</span></div>
+    <p style="text-align:center;margin:0"><span class="val lv-${lv}" style="font-size:14px">${LV_TXT[lv]}</span></p>
+    <p><b>${M[e.moment]?.icon} ${M[e.moment]?.name}</b><br><span class="muted">${fmtDay(d)} · ${fmtTime(d)}${e.mealStart?` · comida a las ${e.mealStart}`:''}</span></p>
+    ${e.food?`<p><b>Comida:</b> ${esc(e.food)}</p>`:''}
+    ${e.tags?.length?`<div class="chips">${e.tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>`:''}
+    ${e.notes?`<p><b>Notas:</b> ${esc(e.notes)}</p>`:''}
+    ${e.foodPhoto?`<img src="${URL.createObjectURL(e.foodPhoto)}" style="width:100%;border-radius:14px;max-height:35vh;object-fit:cover;margin-top:6px">`:''}
+    ${e.ai?`<div class="card" style="margin-top:10px;background:var(--priSoft)"><h2>🤖 Recomendación IA</h2>${aiHTML(e.ai)}</div>`:''}
+    <div class="card" style="margin-top:10px"><h2>🥗 Recomendaciones</h2>${recoHTML(e.value,e.moment,e.food)}</div>
+    <div class="row" style="margin-top:12px"><button class="btn" style="flex:1" onclick="document.getElementById('mView').classList.remove('on')">Cerrar</button><button class="btn pri" style="flex:1" onclick="editEntry('${e.id}')">Editar</button></div>`;
+  document.getElementById('mView').classList.add('on');
+}
+
+/* ---------- Alimentación: base de conocimiento ---------- */
+// sem: 'verde' = preferir, 'amarillo' = moderar porción, 'rojo' = evitar o reducir mucho
+const FOODS = [
+  // ROJO
+  {k:['gaseosa','coca','pepsi','refresco','fresco de','frescos','jugo','néctar','nectar','té frío','te frio','bebida energ','gatorade','frutaleza'],n:'Bebidas azucaradas (gaseosa, frescos, jugos)',s:'rojo',w:'Suben la glucosa muy rápido. Cámbialas por agua, agua con limón, té o café sin azúcar.'},
+  {k:['pinol','pinolillo','cacao','chicha','atol','tiste','avena con azúcar','café con azúcar','cafe con azucar','chocolate'],n:'Bebidas tradicionales endulzadas (pinolillo, cacao, chicha, atol)',s:'rojo',w:'Llevan maíz/cacao con bastante azúcar. Si las tomas, sin azúcar o con edulcorante y en porción pequeña.'},
+  {k:['pan dulce','rosquilla','rosquillas','perrerreque','torta','pastel','queque','galleta','dona','postre','tres leches','cajeta','dulce','helado','flan','buñuelo','bunuelo','arroz con leche','sorbete','azúcar','azucar','miel','leche condensada','almíbar','almibar','gofio'],n:'Dulces, postres y repostería',s:'rojo',w:'Mucho azúcar y harina refinada. Reserva para ocasiones especiales y en porción mínima, nunca en ayunas.'},
+  {k:['maduro','plátano frito','platano frito','tajada','tostones','papas fritas','papa frita','frito','frita','fritanga','chicharrón','chicharron','vigorón','vigoron','enchilada','quesillo','nacatamal','repocheta','taco frito'],n:'Frituras y fritanga (maduro frito, tajadas, nacatamal, vigorón)',s:'rojo',w:'Combinan carbohidrato y mucha grasa: la glucosa sube y se queda alta por horas. Prefiere cocido, asado o al horno.'},
+  {k:['cerveza','toña','tona','victoria','ron','flor de caña','licor','guaro','vino dulce'],n:'Alcohol',s:'rojo',w:'Puede causar bajadas peligrosas (sobre todo en ayunas o con medicamento) y la cerveza aporta carbohidratos. Evítalo o consulta a tu médico.'},
+  {k:['pan blanco','pan bimbo','pan de molde','sandwich','sándwich','hot dog','hamburguesa','pizza','sopa maruchan','instantánea','instantanea','cereal azucarado','corn flakes','zucaritas'],n:'Harinas refinadas y ultraprocesados',s:'rojo',w:'Se absorben rápido. Si comes pan, que sea integral y en poca cantidad.'},
+  // AMARILLO
+  {k:['arroz','gallo pinto','pinto','tortilla','tortillas','pan integral','pasta','espagueti','fideo','plátano','platano','banano','guineo','papa','yuca','quequisque','malanga','elote','maíz','maiz','tamal','avena','cereal','frijol','frijoles','lenteja','garbanzo'],n:'Carbohidratos (arroz, gallo pinto, tortilla, plátano, papa, yuca)',s:'amarillo',w:'Son la principal fuente de azúcar en sangre. No los elimines: limítalos a ¼ del plato (ej. ½ taza de arroz o gallo pinto, o 1 tortilla). Los frijoles son la mejor opción por su fibra.'},
+  {k:['mango','piña','pina','papaya','sandía','sandia','melón','melon','uva','pitahaya','mamón','mamon','jocote','fruta','frutas','naranja','mandarina'],n:'Frutas',s:'amarillo',w:'Sanas pero con azúcar natural: 1 porción pequeña, entera (no en jugo) y mejor acompañada de proteína. Las frutas muy dulces (mango maduro, piña, sandía) en menor cantidad.'},
+  {k:['leche','yogur','yogurt','cuajada','crema','mantequilla','queso','quesillo crema','queso seco'],n:'Lácteos y quesos',s:'amarillo',w:'Aportan proteína, pero el queso seco y la crema llevan mucha sal y grasa. Leche/yogur sin azúcar; queso fresco o cuajada en porción pequeña.'},
+  {k:['carne','carne de res','cerdo','costilla','chorizo','salchicha','mortadela','jamón','jamon','embutido','carne asada','churrasco'],n:'Carnes rojas y embutidos',s:'amarillo',w:'Casi no suben la glucosa, pero los embutidos y cortes grasos afectan corazón y presión. Prefiere cortes magros y asados, pocas veces por semana.'},
+  // VERDE
+  {k:['ensalada','lechuga','repollo','tomate','pepino','chiltoma','brócoli','brocoli','pipián','pipian','chayote','ayote','zanahoria','vainica','espinaca','verdura','verduras','vegetales','rábano','rabano','berenjena','coliflor','hongos','apio'],n:'Verduras y ensaladas',s:'verde',w:'Lo mejor para tu glucosa: llénate con ellas. Deben ocupar la MITAD del plato. Empezar la comida por la ensalada ayuda a que suba menos.'},
+  {k:['pollo','pechuga','pescado','tilapia','guapote','atún','atun','sardina','camarón','camaron','huevo','huevos','pavo','carne magra','res magra'],n:'Proteínas magras (pollo, pescado, huevo)',s:'verde',w:'Dan saciedad y casi no suben la glucosa. ¼ del plato. Cocidas, a la plancha o al horno.'},
+  {k:['aguacate','nueces','maní','mani','almendra','semilla','chía','chia','linaza','aceite de oliva'],n:'Grasas saludables (aguacate, maní, semillas)',s:'verde',w:'Ayudan a que la glucosa suba más despacio. En porciones pequeñas (¼ de aguacate, un puñito de maní sin sal).'},
+  {k:['agua','té sin azúcar','te sin azucar','café sin azúcar','cafe sin azucar','agua con limón','agua de jamaica sin','infusión','infusion','manzanilla'],n:'Agua y bebidas sin azúcar',s:'verde',w:'La mejor bebida. Mantenerse hidratado ayuda a bajar la glucosa alta.'}
+];
+const SEM = {verde:['🟢','Recomendado','ok'], amarillo:['🟡','Con moderación','warn'], rojo:['🔴','Evitar / reducir','bad']};
+function norm(s){return String(s||'').toLowerCase()}
+function matchFoods(text){
+  const t=norm(text); const hits=[];
+  const L='a-z0-9áéíóúüñ';
+  const rx=k=>new RegExp(`(^|[^${L}])${k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}(s|es)?($|[^${L}])`);
+  FOODS.forEach(f=>{ if(f.k.some(k=>rx(k).test(t))) hits.push(f) });
+  return hits;
+}
+function recoHTML(v, moment, food){
+  const lv = level(v, moment);
+  let html='';
+  // 1. interpretación del valor
+  const nxt = {
+    ayunas:'tu desayuno', pre:'esta comida', post:'tu próxima comida', dormir:'la cena de mañana y tu desayuno', otra:'tu próxima comida'
+  }[moment]||'tu próxima comida';
+  const byLv = {
+    ok:`<div class="alert ok">✅ Vas bien. Mantén en ${nxt} el método del plato: ½ verduras, ¼ proteína, ¼ carbohidrato.</div>`,
+    high:`<div class="alert warn">⬆️ Valor por encima de la meta. Para ${nxt}: reduce el carbohidrato (arroz/tortilla/pan/plátano) a la mitad de lo habitual, empieza con ensalada y evita bebidas con azúcar. Una caminata de 15–20 min después de comer ayuda a bajarla.</div>`,
+    vhigh:`<div class="alert bad">🔺 Muy alto. Hoy evita por completo azúcar, harinas, frituras y bebidas azucaradas; toma agua. En ${nxt} solo verduras + proteína magra y una porción mínima de frijoles. Si se repite, avisa a tu médico.</div>`,
+    low:`<div class="alert low">⚠️ Primero corrige la baja (regla 15-15: ½ vaso de jugo o gaseosa normal, espera 15 min y vuelve a medir). Cuando estés por encima de ${T.low}, come algo con carbohidrato y proteína (ej. 1 tortilla con huevo o queso). No te saltes comidas.</div>`
+  };
+  html += byLv[lv]||'';
+  if(moment==='ayunas' && lv==='high') html+=`<div class="alert info">🌅 Ayunas alta: suele relacionarse con una cena tardía o abundante en carbohidratos. Prueba cenar más temprano y ligero (verduras + proteína) y comenta este patrón con tu médico.</div>`;
+  if(moment==='post' && lv!=='low'){
+    const pre = ENTRIES.filter(e=>dayKey(e.ts)===isoDate(new Date()) && (e.moment==='pre'||e.moment==='ayunas')).sort((a,b)=>b.ts-a.ts)[0];
+    if(pre && v){const d=v-pre.value; html+=`<div class="alert ${d>60?'bad':d>40?'warn':'ok'}">🍽️ Esta comida te subió <b>${d>0?'+':''}${d} mg/dL</b> (de ${pre.value} a ${v}). ${d>60?'Es una subida grande: esa combinación conviene cambiarla o reducir el carbohidrato.':d>40?'Subida algo alta: reduce un poco la porción de carbohidrato.':'Buena respuesta: esa comida te funciona.'}</div>`}
+  }
+  // 2. análisis de lo que comió
+  const hits = matchFoods(food);
+  if(hits.length){
+    html += `<div style="margin-top:8px"><b style="font-size:14px">Lo que comiste:</b>`;
+    ['rojo','amarillo','verde'].forEach(s=>hits.filter(h=>h.s===s).forEach(h=>{
+      html+=`<div class="alert ${SEM[s][2]}" style="margin:6px 0">${SEM[s][0]} <b>${h.n}</b> — ${h.w}</div>`;
+    }));
+    html += `</div>`;
+    const hasVeg = hits.some(h=>h.n.startsWith('Verduras')), hasCarb = hits.some(h=>h.s==='amarillo'&&h.n.startsWith('Carbohidratos'));
+    if(!hasVeg) html+=`<div class="alert info">🥬 No mencionas verduras: agrega ensalada o verduras cocidas para que la glucosa suba menos.</div>`;
+    if(hasCarb && hits.filter(h=>h.n.startsWith('Carbohidratos')).length && /arroz|pinto/.test(norm(food)) && /tortilla|pan|pl[aá]tano|papa|yuca/.test(norm(food)))
+      html+=`<div class="alert warn">🍚 Combinas dos o más carbohidratos (ej. arroz/gallo pinto + tortilla/plátano). Elige solo uno por comida.</div>`;
+  } else if(food && food.trim()) {
+    html += `<p class="muted" style="font-size:13px">No reconocí los alimentos escritos; usa el análisis con IA o revisa la guía de alimentación.</p>`;
+  }
+  return html;
+}
+function foodGuideHTML(){
+  let h=`<div class="alert info">🍽️ <b>Método del plato</b> (plato de ~23 cm): ½ verduras sin almidón · ¼ proteína magra · ¼ carbohidrato (arroz, gallo pinto, tortilla, plátano cocido, papa, yuca). Bebida: agua.</div>`;
+  ['verde','amarillo','rojo'].forEach(s=>{
+    h+=`<h3 style="font-size:15px;margin:14px 0 6px">${SEM[s][0]} ${SEM[s][1]}</h3>`;
+    FOODS.filter(f=>f.s===s).forEach(f=>h+=`<div style="padding:6px 0;border-top:1px solid var(--line);font-size:14px"><b>${f.n}</b><div class="muted">${f.w}</div></div>`);
+  });
+  h+=`<p class="muted" style="font-size:12px;margin-top:10px">Recomendaciones generales de educación en diabetes; tu médico o nutricionista puede ajustarlas a tu tratamiento.</p>`;
+  return h;
+}
+
+/* ---------- Foto del plato ---------- */
+let FOODPHOTO=null;
+function resizeImage(file, max=1280, q=0.82){
+  return new Promise(res=>{
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=()=>{const sc=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');
+      c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      c.toBlob(b=>{URL.revokeObjectURL(url);res(b)},'image/jpeg',q)};
+    img.src=url;
+  });
+}
+async function onFoodPhoto(file){
+  if(!file) return;
+  FOODPHOTO = await resizeImage(file);
+  const p=document.getElementById('foodPrev'); p.src=URL.createObjectURL(FOODPHOTO); p.classList.remove('hidden');
+  document.getElementById('foodDel').classList.remove('hidden');
+  document.getElementById('foodIn').value='';
+  if(!AI.key) toast('Escribe qué comiste para recibir recomendaciones (o activa la IA en Ajustes)');
+}
+function clearFoodPhoto(){
+  FOODPHOTO=null; const p=document.getElementById('foodPrev'); p.classList.add('hidden'); p.removeAttribute('src');
+  document.getElementById('foodDel').classList.add('hidden');
+}
+
+/* ---------- Asistente IA (Claude) ---------- */
+const AI_DEF = {gemini:'gemini-flash-latest', claude:'claude-sonnet-5-5'};
+let AI = Object.assign({prov:'gemini', key:'', model:AI_DEF.gemini}, LS.get('ai',{}));
+let AIRESULT=null;
+function aiProvHelp(){
+  const p=document.getElementById('aiProv').value, m=document.getElementById('aiModel');
+  if(!m.value || Object.values(AI_DEF).includes(m.value) || (p==='gemini')!==m.value.startsWith('gemini')) m.value=AI_DEF[p];
+  document.getElementById('aiHelp').innerHTML = p==='gemini'
+    ? `<b>Cómo obtener la clave gratis:</b> entra a <b>aistudio.google.com</b> con tu cuenta de Google → <b>Get API key</b> → <b>Create API key</b> → cópiala y pégala aquí. El nivel gratuito tiene un límite de solicitudes por día (de sobra para unas 4 mediciones diarias). Ten en cuenta que en el nivel gratuito Google puede usar lo que envías para mejorar sus productos.`
+    : `La clave se obtiene en <b>console.anthropic.com</b> → API Keys. Es de pago por uso (centavos por análisis) y no se usa para entrenar.`;
+}
+function saveAI(){
+  AI.prov=document.getElementById('aiProv').value;
+  AI.key=document.getElementById('aiKey').value.trim();
+  AI.model=document.getElementById('aiModel').value.trim()||AI_DEF[AI.prov];
+  LS.set('ai',AI); toast(AI.key?'Asistente IA activado ('+(AI.prov==='gemini'?'Gemini':'Claude')+')':'Clave eliminada'); updateAIBtn();
+}
+async function detectModels(){
+  saveAI(); if(!AI.key){toast('Primero pega la clave');return}
+  try{
+    let names=[];
+    if(AI.prov==='gemini'){
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key='+encodeURIComponent(AI.key)); const j=await r.json();
+      if(!r.ok) throw new Error(j.error?.message||r.status);
+      names=j.models.filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')&&/flash/.test(m.name)&&!/image|tts|audio|live|embed/.test(m.name)).map(m=>m.name.replace('models/',''));
+    } else {
+      const r=await fetch('https://api.anthropic.com/v1/models',{headers:{'x-api-key':AI.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}}); const j=await r.json();
+      if(!r.ok) throw new Error(j.error?.message||r.status);
+      names=j.data.map(m=>m.id);
+    }
+    document.getElementById('aiModels').innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
+    toast(names.length+' modelos disponibles; toca el campo Modelo para elegir');
+  }catch(e){toast('No se pudo listar: '+(e.message||e))}
+}
+async function testAI(){
+  saveAI(); if(!AI.key){toast('Primero pega la clave');return}
+  toast('Probando…');
+  try{ const t=await callAI([{text:'Responde solo: OK'}]); toast('✅ Funciona: '+t.trim().slice(0,30)); }
+  catch(e){ toast('❌ '+(e.message||e)); }
+}
+// parts: [{text}] o [{image: blob}]
+async function callAI(parts){
+  if(AI.prov==='gemini'){
+    const gp=[];
+    for(const p of parts) gp.push(p.text!=null?{text:p.text}:{inline_data:{mime_type:'image/jpeg',data:(await blobToB64(p.image)).split(',')[1]}});
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(AI.model)}:generateContent`;
+    const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':AI.key},
+      body:JSON.stringify({contents:[{role:'user',parts:gp}],generationConfig:{temperature:0.4,maxOutputTokens:2048}})});
+    const j=await r.json();
+    if(!r.ok){
+      if(r.status===429) throw new Error('Llegaste al límite gratuito por ahora; intenta en un rato.');
+      if(r.status===404) throw new Error('Modelo no disponible; toca "Detectar" en Ajustes y elige otro.');
+      throw new Error(j.error?.message||('Error '+r.status));
+    }
+    return (j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+  } else {
+    const content=[];
+    for(const p of parts) content.push(p.text!=null?{type:'text',text:p.text}:{type:'image',source:{type:'base64',media_type:'image/jpeg',data:(await blobToB64(p.image)).split(',')[1]}});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{
+      'content-type':'application/json','x-api-key':AI.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:AI.model,max_tokens:1200,messages:[{role:'user',content}]})});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error?.message||('Error '+r.status));
+    return j.content.map(c=>c.text||'').join('');
+  }
+}
+function updateAIBtn(){
+  const b=document.getElementById('aiBtn'); if(!b) return;
+  b.textContent = AI.key ? '🤖 Analizar fotos con IA y recomendar' : '🤖 Análisis con IA (configúralo en Ajustes)';
+}
+function aiHTML(r){
+  if(!r) return '';
+  const li=a=>(a||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  return `${r.resumen?`<p style="margin-top:0">${esc(r.resumen)}</p>`:''}
+    ${r.plato?`<p><b>Plato identificado:</b> ${esc(r.plato)}</p>`:''}
+    ${r.preferir?.length?`<div class="alert ok"><b>🟢 Te conviene</b><ul style="margin:4px 0 0;padding-left:18px">${li(r.preferir)}</ul></div>`:''}
+    ${r.evitar?.length?`<div class="alert bad"><b>🔴 Evita o reduce</b><ul style="margin:4px 0 0;padding-left:18px">${li(r.evitar)}</ul></div>`:''}
+    ${r.siguiente_comida?`<div class="alert info"><b>🍽️ Próxima comida sugerida:</b> ${esc(r.siguiente_comida)}</div>`:''}
+    ${r.alerta?`<div class="alert warn">${esc(r.alerta)}</div>`:''}`;
+}
+async function runAI(){
+  if(!AI.key){toast('Agrega tu clave de API en Ajustes → Asistente IA');return}
+  if(!PHOTO && !FOODPHOTO && !document.getElementById('fFood').value.trim()){toast('Toma la foto del glucómetro o del plato primero');return}
+  const out=document.getElementById('aiOut'), btn=document.getElementById('aiBtn');
+  btn.disabled=true; btn.textContent='⏳ Analizando…';
+  try{
+    const parts=[];
+    if(PHOTO){parts.push({text:'Foto 1: pantalla del glucómetro.'});parts.push({image:PHOTO})}
+    if(FOODPHOTO){parts.push({text:'Foto 2: el plato de comida.'});parts.push({image:FOODPHOTO})}
+    const recent = ENTRIES.slice(0,12).map(e=>`${isoDate(new Date(e.ts))} ${hhmm(new Date(e.ts))} ${M[e.moment]?.short}: ${e.value}${e.food?' ('+e.food+')':''}`).join('\n');
+    parts.push({text:
+`Soy un adulto en Nicaragua que lleva control de diabetes con glucómetro.
+Medición actual: valor escrito=${document.getElementById('fVal').value||'(no escrito, léelo de la foto)'} mg/dL; momento=${M[MOMENT].name}; hora=${document.getElementById('fTime').value}; comida descrita="${document.getElementById('fFood').value}".
+Mis metas: ayunas/antes de comer ${T.preMin}-${T.preMax}, 2 h después <${T.postMax}, hipoglucemia <${T.low}.
+Mediciones recientes:\n${recent||'(ninguna)'}
+Responde SOLO con JSON válido, en español, sin texto adicional ni bloques de código, con esta forma:
+{"lectura_glucometro": número o null (el valor que ves en la pantalla del glucómetro, si hay foto),
+ "plato": "descripción breve de lo que ves en el plato o null",
+ "resumen": "1-2 frases interpretando la medición",
+ "preferir": ["3-5 alimentos o acciones concretas que me convienen, usando comida común en Nicaragua"],
+ "evitar": ["3-5 alimentos concretos que no me convienen ahora y por qué, breve"],
+ "siguiente_comida": "ejemplo concreto de mi próxima comida con porciones",
+ "alerta": "solo si el valor es peligroso (<70 o >250) o hay algo que consultar con el médico; si no, null"}`});
+    const txt = await callAI(parts);
+    const res = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}')+1));
+    AIRESULT = res;
+    const fv=document.getElementById('fVal');
+    if(res.lectura_glucometro && !fv.value){fv.value=res.lectura_glucometro; toast('Valor leído de la foto: '+res.lectura_glucometro+' — verifícalo')}
+    else if(res.lectura_glucometro && +fv.value!==+res.lectura_glucometro) toast(`Ojo: la foto parece marcar ${res.lectura_glucometro}`);
+    if(res.plato && !document.getElementById('fFood').value) document.getElementById('fFood').value=res.plato;
+    previewLevel();
+    out.innerHTML = `<div class="card" style="margin-top:10px;background:var(--priSoft)"><h2>🤖 Recomendación IA</h2>${aiHTML(res)}</div>`;
+  }catch(err){
+    out.innerHTML = `<div class="alert bad">No se pudo analizar: ${esc(err.message||err)}. Revisa tu conexión y la clave en Ajustes (o usa las recomendaciones integradas de arriba).</div>`;
+  }
+  btn.disabled=false; updateAIBtn();
+}
+
+/* ---------- Exportar / respaldo ---------- */
+function download(name, blob){
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+}
+function exportCSV(){
+  const rows=[['Fecha','Hora','Momento','Glucosa (mg/dL)','Estado','Hora inicio comida','Comida','Etiquetas','Notas','Foto']];
+  ENTRIES.slice().sort((a,b)=>a.ts-b.ts).forEach(e=>{const d=new Date(e.ts);
+    rows.push([isoDate(d),hhmm(d),M[e.moment]?.name||e.moment,e.value,LV_TXT[level(e.value,e.moment)],e.mealStart||'',e.food||'',(e.tags||[]).join(', '),e.notes||'',e.photo?'Sí':'No'])});
+  const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  download(`glucosa_${isoDate(new Date())}.csv`,new Blob([csv],{type:'text/csv;charset=utf-8'}));
+}
+const blobToB64=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+async function exportBackup(){
+  toast('Preparando copia…');
+  const out=[];
+  for(const e of ENTRIES){const c=Object.assign({},e); if(e.photo) c.photo=await blobToB64(e.photo); out.push(c)}
+  const data={app:'miglucosa',version:VERSION,exported:new Date().toISOString(),targets:T,reminders:REM,planStart:planStart(),entries:out};
+  download(`miglucosa_respaldo_${isoDate(new Date())}.json`,new Blob([JSON.stringify(data)],{type:'application/json'}));
+}
+async function importBackup(file){
+  if(!file) return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(data.app!=='miglucosa') throw 0;
+    for(const e of data.entries){ if(e.photo) e.photo=await (await fetch(e.photo)).blob(); await putEntry(e); }
+    if(data.targets){T=data.targets;LS.set('targets',T)}
+    if(data.reminders){REM=data.reminders;LS.set('rem',REM)}
+    if(data.planStart) LS.set('planStart',data.planStart);
+    toast(`Restauradas ${data.entries.length} mediciones`); reload();
+  }catch(e){toast('Archivo no válido')}
+  document.getElementById('impFile').value='';
+}
+async function wipeAll(){
+  if(!confirm('¿Borrar TODAS las mediciones y fotos? Haz una copia antes.')) return;
+  if(!confirm('Confirma de nuevo: esto no se puede deshacer.')) return;
+  await clearEntries(); LS.set('planStart',null); toast('Datos borrados'); reload();
+}
+
+/* ---------- Instalación PWA ---------- */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBtn').classList.remove('hidden')});
+async function doInstall(){if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBtn').classList.add('hidden')}
+if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+/* ---------- Inicio ---------- */
+(async()=>{
+  await openDB();
+  if(navigator.storage?.persist) navigator.storage.persist().catch(()=>{});
+  await reload();
+  setInterval(()=>{renderTimer();checkReminders()},1000*15);
+  setInterval(renderTimer,1000);
+  checkReminders();
+  if(location.hash==='#nueva') openNew();
+})();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderAll();checkReminders()}});
+</script>
+</body>
+</html>
